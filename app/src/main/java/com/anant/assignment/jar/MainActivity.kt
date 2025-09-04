@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -25,6 +26,19 @@ class MainActivity : ComponentActivity() {
                 var expandedCardIndex by remember { mutableStateOf(2) } // Maintain card state
                 
                 Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding ->
+                    // Handle system back gesture
+                    BackHandler {
+                        if (showLandingPage) {
+                            // Back from landing page - go to onboarding screen
+                            showLandingPage = false
+                            shouldRestartAnimation = false
+                        } else {
+                            // Back from onboarding - restart animation (same as back button behavior)
+                            shouldRestartAnimation = true
+                            expandedCardIndex = 2
+                        }
+                    }
+                    
                     if (showLandingPage) {
                         LandingPageScreen(
                             onBackClick = { 
@@ -36,7 +50,11 @@ class MainActivity : ComponentActivity() {
                     } else {
                         SequentialAnimationScreen(
                             onOnboardingComplete = { showLandingPage = true },
-                            onNavigateBack = { finish() },
+                            onNavigateBack = { 
+                                // Restart animation instead of closing app
+                                shouldRestartAnimation = true
+                                expandedCardIndex = 2
+                            },
                             shouldRestartAnimation = shouldRestartAnimation,
                             expandedCardIndex = expandedCardIndex,
                             onExpandedCardChange = { newIndex -> expandedCardIndex = newIndex },

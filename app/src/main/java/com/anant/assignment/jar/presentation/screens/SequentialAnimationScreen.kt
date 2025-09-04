@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,9 +33,10 @@ import android.util.Log
 
 enum class SequentialAnimationState {
     WELCOME, WELCOME_FADE_OUT, HEADER_FADE_IN,
-    CARD_1_SLIDE_UP_EXPANDED, CARD_1_VISIBLE_EXPANDED, CARD_1_COLLAPSED,
-    CARD_2_SLIDE_UP_EXPANDED, CARD_2_VISIBLE_EXPANDED, CARD_2_COLLAPSED,
-    CARD_3_SLIDE_UP_EXPANDED, CARD_3_VISIBLE_EXPANDED, ANIMATION_COMPLETE
+    CARD_1_SLIDE_UP_EXPANDED, CARD_1_VISIBLE_EXPANDED, 
+    CARD_1_COLLAPSE_TILT_CARD_2_HALF, CARD_1_COLLAPSED_CARD_2_EXPANDED,
+    CARD_2_COLLAPSE_TILT_CARD_3_HALF, CARD_2_COLLAPSED_CARD_3_EXPANDED,
+    ANIMATION_COMPLETE
 }
 
 @Composable
@@ -100,12 +102,10 @@ private fun SequentialAnimationContent(
             SequentialAnimationState.HEADER_FADE_IN,
             SequentialAnimationState.CARD_1_SLIDE_UP_EXPANDED,
             SequentialAnimationState.CARD_1_VISIBLE_EXPANDED,
-            SequentialAnimationState.CARD_1_COLLAPSED,
-            SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_2_VISIBLE_EXPANDED,
-            SequentialAnimationState.CARD_2_COLLAPSED,
-            SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_3_VISIBLE_EXPANDED,
+            SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF,
+            SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED,
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF,
+            SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED,
             SequentialAnimationState.ANIMATION_COMPLETE -> 1f
             else -> 0f
         },
@@ -117,12 +117,10 @@ private fun SequentialAnimationContent(
         targetValue = when (animationState) {
             SequentialAnimationState.CARD_1_SLIDE_UP_EXPANDED,
             SequentialAnimationState.CARD_1_VISIBLE_EXPANDED,
-            SequentialAnimationState.CARD_1_COLLAPSED,
-            SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_2_VISIBLE_EXPANDED,
-            SequentialAnimationState.CARD_2_COLLAPSED,
-            SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_3_VISIBLE_EXPANDED,
+            SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF,
+            SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED,
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF,
+            SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED,
             SequentialAnimationState.ANIMATION_COMPLETE -> 0f
             else -> 1000f
         },
@@ -130,13 +128,21 @@ private fun SequentialAnimationContent(
         label = "card1_offset"
     )
 
+    val card1Rotation by animateFloatAsState(
+        targetValue = when (animationState) {
+            SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF -> 6f // Card 1 collapsed with +6° tilt
+            else -> 0f
+        },
+        animationSpec = tween(durationMillis = 600, easing = EaseOut),
+        label = "card1_rotation"
+    )
+
     val card2OffsetY by animateFloatAsState(
         targetValue = when (animationState) {
-            SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_2_VISIBLE_EXPANDED,
-            SequentialAnimationState.CARD_2_COLLAPSED,
-            SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_3_VISIBLE_EXPANDED,
+            SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF -> 400f // Half visible at bottom with tilt
+            SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED -> 0f // Slide up to full position
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF -> 0f // Stay at full position when card3 appears
+            SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED,
             SequentialAnimationState.ANIMATION_COMPLETE -> 0f
             else -> 1000f
         },
@@ -144,15 +150,34 @@ private fun SequentialAnimationContent(
         label = "card2_offset"
     )
 
+    val card2Rotation by animateFloatAsState(
+        targetValue = when (animationState) {
+            SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF -> -6f // Card 2 expanded with -6° tilt
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF -> -6f // Card 2 collapsed with -6° tilt
+            else -> 0f
+        },
+        animationSpec = tween(durationMillis = 600, easing = EaseOut),
+        label = "card2_rotation"
+    )
+
     val card3OffsetY by animateFloatAsState(
         targetValue = when (animationState) {
-            SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED,
-            SequentialAnimationState.CARD_3_VISIBLE_EXPANDED,
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF -> 400f // Half visible at bottom with tilt
+            SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED,
             SequentialAnimationState.ANIMATION_COMPLETE -> 0f
             else -> 1000f
         },
         animationSpec = tween(durationMillis = 800, easing = EaseOutCubic),
         label = "card3_offset"
+    )
+
+    val card3Rotation by animateFloatAsState(
+        targetValue = when (animationState) {
+            SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF -> 6f // Card 3 expanded with +6° tilt
+            else -> 0f
+        },
+        animationSpec = tween(durationMillis = 600, easing = EaseOut),
+        label = "card3_rotation"
     )
 
     val currentActiveCard = when {
@@ -165,12 +190,12 @@ private fun SequentialAnimationContent(
         }
         animationState == SequentialAnimationState.CARD_1_SLIDE_UP_EXPANDED ||
                 animationState == SequentialAnimationState.CARD_1_VISIBLE_EXPANDED ||
-                animationState == SequentialAnimationState.CARD_1_COLLAPSED -> educationData.educationCardList.getOrNull(0)
-        animationState == SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED ||
-                animationState == SequentialAnimationState.CARD_2_VISIBLE_EXPANDED ||
-                animationState == SequentialAnimationState.CARD_2_COLLAPSED -> educationData.educationCardList.getOrNull(1)
-        animationState == SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED ||
-                animationState == SequentialAnimationState.CARD_3_VISIBLE_EXPANDED -> educationData.educationCardList.getOrNull(2)
+                animationState == SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF ||
+                animationState == SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED -> educationData.educationCardList.getOrNull(0)
+        animationState == SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED ||
+                animationState == SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF ||
+                animationState == SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED -> educationData.educationCardList.getOrNull(1)
+        animationState == SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED -> educationData.educationCardList.getOrNull(2)
         else -> null
     }
 
@@ -216,22 +241,34 @@ private fun SequentialAnimationContent(
         delay(800)
         animationState = SequentialAnimationState.HEADER_FADE_IN
         delay(800)
+        // Card 1 slides up from bottom to center (1500ms)
         animationState = SequentialAnimationState.CARD_1_SLIDE_UP_EXPANDED
         delay(educationData.bottomToCenterTranslationInterval.toLong())
+        
+        // Card 1 stays expanded (3000ms)
         animationState = SequentialAnimationState.CARD_1_VISIBLE_EXPANDED
         delay(educationData.expandCardStayInterval.toLong())
-        animationState = SequentialAnimationState.CARD_1_COLLAPSED
-        delay(educationData.collapseExpandIntroInterval.toLong())
-        animationState = SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED
-        delay(educationData.bottomToCenterTranslationInterval.toLong())
-        animationState = SequentialAnimationState.CARD_2_VISIBLE_EXPANDED
-        delay(educationData.expandCardStayInterval.toLong())
-        animationState = SequentialAnimationState.CARD_2_COLLAPSED
-        delay(educationData.collapseExpandIntroInterval.toLong())
-        animationState = SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED
-        delay(educationData.bottomToCenterTranslationInterval.toLong())
-        animationState = SequentialAnimationState.CARD_3_VISIBLE_EXPANDED
+        
+        // Card 1 tilts and Card 2 appears half-tilted (1000ms - both cards tilted)
+        animationState = SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF
         delay(educationData.collapseCardTiltInterval.toLong())
+        
+        // Card 1 straightens, Card 2 slides from bottom to center (500ms - transition)
+        animationState = SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED
+        delay(educationData.collapseExpandIntroInterval.toLong())
+        
+        // Card 2 stays expanded (3000ms)
+        delay(educationData.expandCardStayInterval.toLong())
+        
+        // Card 2 tilts and Card 3 appears half-tilted (1000ms - both cards tilted)
+        animationState = SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF
+        delay(educationData.collapseCardTiltInterval.toLong())
+        
+        // Card 2 straightens, Card 3 slides from bottom to center (500ms - transition)
+        animationState = SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED
+        delay(educationData.collapseExpandIntroInterval.toLong())
+        
+        // Animation complete
         animationState = SequentialAnimationState.ANIMATION_COMPLETE
     }
 
@@ -240,6 +277,29 @@ private fun SequentialAnimationContent(
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
+        if (animationState.ordinal >= SequentialAnimationState.CARD_1_SLIDE_UP_EXPANDED.ordinal) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(453.84.dp)
+                        .offset(y = 226.92.dp) // Move down by half height so center is below screen
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x80FFDBF6), // rgba(255, 219, 246, 0.5)
+                                    Color(0x00FFDBF6)  // rgba(255, 219, 246, 0)
+                                ),
+                            ),
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+        
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -349,21 +409,29 @@ private fun SequentialAnimationContent(
                                 onExpandedCardChange(0)
                             }
                         },
-                        modifier = Modifier.graphicsLayer(translationY = card1OffsetY)
+                        modifier = Modifier.graphicsLayer(
+                            translationY = card1OffsetY,
+                            rotationZ = card1Rotation
+                        )
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (animationState.ordinal >= SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED.ordinal) {
+            if (animationState == SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF ||
+                animationState == SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED ||
+                animationState == SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF ||
+                animationState == SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED ||
+                animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
                 educationData.educationCardList.getOrNull(1)?.let { card ->
                     SequentialEducationCard(
                         card = card,
                         isExpanded = if (animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
                             expandedCardIndex == 1
                         } else {
-                            animationState == SequentialAnimationState.CARD_2_SLIDE_UP_EXPANDED ||
-                                    animationState == SequentialAnimationState.CARD_2_VISIBLE_EXPANDED
+                            // Card 2 is expanded when half-shown with tilt AND when fully expanded
+                            animationState == SequentialAnimationState.CARD_1_COLLAPSE_TILT_CARD_2_HALF ||
+                            animationState == SequentialAnimationState.CARD_1_COLLAPSED_CARD_2_EXPANDED
                         },
                         onClick = {
                             if (animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
@@ -371,21 +439,27 @@ private fun SequentialAnimationContent(
                                 onExpandedCardChange(1)
                             }
                         },
-                        modifier = Modifier.graphicsLayer(translationY = card2OffsetY)
+                        modifier = Modifier.graphicsLayer(
+                            translationY = card2OffsetY,
+                            rotationZ = card2Rotation
+                        )
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (animationState.ordinal >= SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED.ordinal) {
+            if (animationState == SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF ||
+                animationState == SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED ||
+                animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
                 educationData.educationCardList.getOrNull(2)?.let { card ->
                     SequentialEducationCard(
                         card = card,
                         isExpanded = if (animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
                             expandedCardIndex == 2
                         } else {
-                            animationState == SequentialAnimationState.CARD_3_SLIDE_UP_EXPANDED ||
-                                    animationState == SequentialAnimationState.CARD_3_VISIBLE_EXPANDED
+                            // Card 3 is expanded when half-shown with tilt AND when fully expanded
+                            animationState == SequentialAnimationState.CARD_2_COLLAPSE_TILT_CARD_3_HALF ||
+                            animationState == SequentialAnimationState.CARD_2_COLLAPSED_CARD_3_EXPANDED
                         },
                         onClick = {
                             if (animationState == SequentialAnimationState.ANIMATION_COMPLETE) {
@@ -393,7 +467,10 @@ private fun SequentialAnimationContent(
                                 onExpandedCardChange(2)
                             }
                         },
-                        modifier = Modifier.graphicsLayer(translationY = card3OffsetY)
+                        modifier = Modifier.graphicsLayer(
+                            translationY = card3OffsetY,
+                            rotationZ = card3Rotation
+                        )
                     )
                 }
             }
