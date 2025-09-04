@@ -34,11 +34,22 @@ fun SequentialEducationCard(
     val cardBackground = Color(0x5228085C)
     
     val borderBrush = if (isExpanded) {
-        Brush.linearGradient(
-            colors = listOf(Color(0x3DFFFFFF), Color(0xFFFFFFFF)),
-            start = androidx.compose.ui.geometry.Offset(0f, 0f),
-            end = androidx.compose.ui.geometry.Offset(0f, Float.POSITIVE_INFINITY)
-        )
+        try {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(android.graphics.Color.parseColor(card.strokeStartColor)),
+                    Color(android.graphics.Color.parseColor(card.strokeEndColor))
+                ),
+                start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                end = androidx.compose.ui.geometry.Offset(0f, Float.POSITIVE_INFINITY)
+            )
+        } catch (e: Exception) {
+            Brush.linearGradient(
+                colors = listOf(Color(0x3DFFFFFF), Color(0xFFFFFFFF)),
+                start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                end = androidx.compose.ui.geometry.Offset(0f, Float.POSITIVE_INFINITY)
+            )
+        }
     } else {
         Brush.linearGradient(colors = listOf(Color(0x1FFFFFFF), Color(0x1FFFFFFF)))
     }

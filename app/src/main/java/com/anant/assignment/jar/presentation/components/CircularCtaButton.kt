@@ -44,7 +44,7 @@ fun CircularCtaButton(
             .height(48.dp)
             .graphicsLayer(translationY = offsetY)
             .clip(RoundedCornerShape(31.dp))
-            .background(Color(0xFF272239))
+            .background(Color(android.graphics.Color.parseColor(saveButtonCta.backgroundColor)))
             .clickable {
                 isClicked = true
                 onClick()
@@ -61,7 +61,7 @@ fun CircularCtaButton(
                 modifier = Modifier.width(85.dp).height(20.dp),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFDF3D6),
+                color = Color(android.graphics.Color.parseColor(saveButtonCta.textColor)),
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp,
                 maxLines = 1
